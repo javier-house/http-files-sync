@@ -1,0 +1,6 @@
+
+
+sync:
+  # 同步到目录
+  target: /mnt/tmp/temp/sync/target/
+  service: http://127.0.0.1:19529

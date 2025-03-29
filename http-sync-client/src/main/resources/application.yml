@@ -1,0 +1,9 @@
+
+# Spring
+spring:
+  application:
+    # 应用名称
+    name: http-sync-client
+  profiles:
+    # 环境配置
+    active: @env@
