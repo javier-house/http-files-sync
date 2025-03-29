@@ -1,0 +1,37 @@
+
+# springdoc-openai 配置
+springdoc:
+  api-docs:
+    # 是否开启接口文档
+    enabled: true
+    # OpenAPI文档的路径
+    path: /v3/api-docs
+  swagger-ui:
+    # swagger-ui路径
+    path: /swagger-ui.html
+    # 持久化认证数据
+    persistAuthorization: true
+  info:
+    # 标题
+    title: '接口文档'
+    # 版本
+    version: '1.0.0'
+  components:
+    # 鉴权方式配置
+    security-schemes:
+      apiKey:
+        type: APIKEY
+        in: HEADER
+        name: Authorization
+  # 分组配置
+  group-configs:
+    - group: boot
+      packages-to-scan: org.eu.liuhw.http.file.sync
+
+
+
+sync:
+  source: /home/admin/share
+  key: 123
+
+

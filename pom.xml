@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.eu.liuhw</groupId>
+    <artifactId>http-files-sync</artifactId>
+    <packaging>pom</packaging>
+    <version>${project.version}</version>
+    <modules>
+        <module>http-sync-service</module>
+        <module>http-sync-client</module>
+        <module>http-sync-base</module>
+    </modules>
+
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <project.version>dev_25.03.29.001</project.version>
+
+
+        <hutool.version>5.8.36</hutool.version>
+        <lombok.version>1.18.30</lombok.version>
+    </properties>
+
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <env>dev</env>
+            </properties>
+        </profile>
+    </profiles>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.2.2.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>5.2.9.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-bom</artifactId>
+                <version>${hutool.version}</version>
+                <type>pom</type>
+                <!-- 注意这里是import -->
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.github.therapi</groupId>
+                            <artifactId>therapi-runtime-javadoc-scribe</artifactId>
+                            <version>0.15.0</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>2.2.2.RELEASE</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+
+</project>

@@ -1,0 +1,13 @@
+
+
+sync:
+  # 同步间隔时间/秒
+  time: 60
+  # 同步超时
+  timeout: 60
+  # 同步到目录
+  target: /home/admin/share_copy
+  # 服务端地址
+  service: http://127.0.0.1:19529
+  # 请求密钥
+  key: 123

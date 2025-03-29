@@ -1,0 +1,17 @@
+server:
+  port: 19529
+
+# Spring
+spring:
+  application:
+    # 应用名称
+    name: http-sync-services
+  profiles:
+    # 环境配置
+    active: @env@
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  resources:
+    static-locations: file:${sync.source}

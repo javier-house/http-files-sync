@@ -1,0 +1,19 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+# idea
+.idea/
+*.iml
+*.iws
+
+# eclipse
+.classpath
+.project
+.setting/
+
+# maven
+target/
+**/target/
+# out
+**/out/
+/logs
+*.log
