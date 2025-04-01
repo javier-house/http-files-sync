@@ -132,8 +132,9 @@ public class SyncClient {
                         else {
                             final String newFile = target + vo.getP();
 
-                            if (StrUtil.isNotBlank(vo.getS()) && FileUtil.exist(newFile) && StrUtil.equals(vo.getS(), DigestUtil.sha256Hex(FileUtil.getInputStream(newFile)))) {
-                                StaticLog.info("文件已经存在 {}", newFile);
+                            final String sha256Hex = DigestUtil.sha256Hex(FileUtil.getInputStream(newFile));
+                            if (StrUtil.isNotBlank(vo.getS()) && FileUtil.exist(newFile) && StrUtil.equals(vo.getS(), sha256Hex)) {
+                                StaticLog.info("文件已经存在 {} sha256：{}", newFile, sha256Hex);
                             }
                             else {
                                 final HttpResponse httpResponse = requestDownload(service + vo.getP(), syncClientProperties.getTimeout() * 1000);
