@@ -54,7 +54,7 @@ public class FileController {
             final FileInfoVo vo = new FileInfoVo();
             final boolean directory = FileUtil.isDirectory(file);
             if (directory) {
-                //不同步隐藏文件夹
+                //不同步隐藏目录
                 if (StrUtil.startWith(name, ".")) {
                     continue;
                 }
@@ -65,7 +65,7 @@ public class FileController {
             vo.setP(StrUtil.replaceFirst(FileUtil.getAbsolutePath(file), source, ""));
 
             if (!directory) {
-                //不是文件夹计算校验值
+                //不是目录计算校验值
                 vo.setS(DigestUtil.sha256Hex(FileUtil.getInputStream(file)));
             }
 

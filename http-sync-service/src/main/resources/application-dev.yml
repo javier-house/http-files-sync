@@ -22,7 +22,7 @@ springdoc:
       apiKey:
         type: APIKEY
         in: HEADER
-        name: token
+        name: Authorization
   # 分组配置
   group-configs:
     - group: boot
@@ -31,6 +31,7 @@ springdoc:
 
 
 sync:
-  source: /mnt/tmp/temp/sync/source/
+  source: /home/admin/share
+  key: 123
 
 

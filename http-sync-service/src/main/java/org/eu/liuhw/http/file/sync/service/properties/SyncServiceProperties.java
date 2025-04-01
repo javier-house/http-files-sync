@@ -22,6 +22,9 @@ public class SyncServiceProperties {
     @NotNull(message = "配置sync.source不能为空")
     private String source;
 
+
+    private String key;
+
     public String getSource() {
         return IPathUtil.rootPath(source);
     }

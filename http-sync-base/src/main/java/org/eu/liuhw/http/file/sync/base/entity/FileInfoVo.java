@@ -20,7 +20,7 @@ public class FileInfoVo {
     private String s;
 
     /**
-     * 是否是文件夹
+     * 是否是目录
      */
     private String d;
 
