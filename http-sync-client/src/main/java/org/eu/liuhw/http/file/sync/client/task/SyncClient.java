@@ -132,8 +132,8 @@ public class SyncClient {
                         else {
                             final String newFile = target + vo.getP();
 
-                            final String sha256Hex = DigestUtil.sha256Hex(FileUtil.getInputStream(newFile));
-                            if (StrUtil.isNotBlank(vo.getS()) && FileUtil.exist(newFile) && StrUtil.equals(vo.getS(), sha256Hex)) {
+                            String sha256Hex;
+                            if (StrUtil.isNotBlank(vo.getS()) && FileUtil.exist(newFile) && StrUtil.equals(vo.getS(), (sha256Hex = DigestUtil.sha256Hex(FileUtil.getInputStream(newFile))))) {
                                 StaticLog.info("文件已经存在 {} sha256：{}", newFile, sha256Hex);
                             }
                             else {
