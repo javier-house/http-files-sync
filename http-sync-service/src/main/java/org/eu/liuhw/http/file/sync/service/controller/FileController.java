@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author JavierHouse
@@ -47,7 +47,21 @@ public class FileController {
     @PostMapping("ls")
     public RArray<FileInfoVo> ls(@RequestBody FilePathDto dto) {
         final String source = syncServiceProperties.getSource();
-        final File[] ls = FileUtil.ls(source + Optional.ofNullable(dto.getP()).orElse(StrUtil.EMPTY));
+        final List<File> ls = Stream.of(FileUtil.ls(source + Optional.ofNullable(dto.getP()).orElse(StrUtil.EMPTY)))
+                .sorted(Comparator.comparing(f -> {
+                    File file = (File) f;
+                    try {
+                        if (!FileUtil.exist(file)) {
+                            return 0L;
+                        }
+                        return file.lastModified();
+                    } catch (Exception e) {
+                        StaticLog.error(e);
+                        return 0L;
+                    }
+                }).reversed())
+                .collect(Collectors.toList());
+
         final List<FileInfoVo> result = new ArrayList<>();
         for (File file : ls) {
             final String name = FileUtil.getName(file);
@@ -63,6 +77,10 @@ public class FileController {
 
 
             vo.setP(StrUtil.replaceFirst(FileUtil.getAbsolutePath(file), source, ""));
+
+            final long length = file.length();
+
+            vo.setL(length);
 
             if (!directory) {
                 //不是目录计算校验值
