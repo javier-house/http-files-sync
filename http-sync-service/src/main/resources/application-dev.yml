@@ -34,4 +34,5 @@ sync:
   source: /home/admin/share
   key: 123
 
-
+knife4j:
+  enable: true

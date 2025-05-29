@@ -6,6 +6,7 @@ import cn.hutool.extra.servlet.ServletUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.Setter;
 import org.eu.liuhw.http.file.sync.service.properties.SyncServiceProperties;
+import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
@@ -57,6 +58,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private void sendError(HttpServletResponse response, int code, String message) throws IOException {
         response.setStatus(code);
+        response.setContentType(MediaType.TEXT_HTML_VALUE);
         response.getWriter().write(message);
         response.getWriter().flush();
     }

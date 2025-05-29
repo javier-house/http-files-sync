@@ -4,14 +4,19 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.StreamProgress;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import cn.hutool.http.*;
+import cn.hutool.http.HttpException;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 import cn.hutool.log.StaticLog;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.eu.liuhw.http.file.sync.base.entity.FileInfoVo;
 import org.eu.liuhw.http.file.sync.base.entity.FilePathDto;
 import org.eu.liuhw.http.file.sync.base.modle.RArray;
@@ -22,6 +27,13 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -136,35 +148,10 @@ public class SyncClient {
                                 StaticLog.info("文件已经存在 {}", newFile);
                             }
                             else {
-                                final HttpResponse httpResponse = requestDownload(service + vo.getP(), syncClientProperties.getTimeout() * 1000);
-                                httpResponse.writeBody(new File(newFile), ".tmp"
-                                        , new StreamProgress() {
-                                            @Override
-                                            public void start() {
-                                                StaticLog.info("下载文件开始 {}", vo.getP());
-                                            }
-
-                                            @Override
-                                            public void progress(long total, long progressSize) {
-                                                if (total == -1) {
-                                                    StaticLog.info("{} 已经下载 {}", vo.getP(), progressSize);
-                                                }
-                                                else {
-                                                    StaticLog.info("{} {} 已经下载 {}， 总大小 {}", NumberUtil.formatPercent(NumberUtil.div(progressSize, total), 2), vo.getP(), progressSize, total);
-                                                }
-
-                                            }
-
-                                            @Override
-                                            public void finish() {
-                                                StaticLog.info("下载文件结束 {}", vo.getP());
-                                            }
-                                        });
-
-
+                                requestDownload(service, vo, newFile);
                             }
 
-                            ThreadUtil.sleep(200);
+                            ThreadUtil.sleep(10);
                         }
 
 
@@ -199,28 +186,103 @@ public class SyncClient {
     /**
      * 发起文件下载请求
      *
-     * @param url
-     * @param timeout
      * @return
      */
-    private HttpResponse requestDownload(String url, int timeout) {
+    @SneakyThrows
+    private void requestDownload(String service, FileInfoVo vo, String newFile) {
+        final int timeout = syncClientProperties.getTimeout() * 1000;
+        final String p = vo.getP();
+        final String url = service + p;
         Assert.notBlank(url, "[url] is blank !");
 
+
+        final StreamProgress progress = new StreamProgress() {
+            @Override
+            public void start() {
+                StaticLog.info("下载文件开始 {}", p);
+            }
+
+            @Override
+            public void progress(long total, long progressSize) {
+                if (total == -1) {
+                    StaticLog.info("{} 已经下载 {}", p, progressSize);
+                }
+                else {
+                    StaticLog.info("{} {} 已经下载 {}， 总大小 {}", NumberUtil.formatPercent(NumberUtil.div(progressSize, total), 2), p, progressSize, total);
+                }
+
+            }
+
+            @Override
+            public void finish() {
+                StaticLog.info("下载文件结束 {}", p);
+            }
+        };
+
+        final Long rangeSize = syncClientProperties.getRangeSize();
+        final Long l = vo.getL();
+        if (syncClientProperties.getRange() && l > rangeSize) {
+            //分区下载
+            final int i = NumberUtil.div(new BigDecimal(l), rangeSize, 0, RoundingMode.UP).intValue();
+            if (i > 9999) {
+                StaticLog.error("range size {} exceeds the 9999 limit", i);
+            }
+            else {
+                StaticLog.info("下载文件开始 {}", newFile);
+                List<String> files = CollUtil.newArrayList();
+                for (int j = 0; j < i; j++) {
+                    final String range = StrFormatter.format("bytes={}-{}", j * rangeSize, (j + 1) * rangeSize -1 >= l ? "" : (j + 1) * rangeSize -1);
+                    final HttpResponse response = getRequest(timeout, url).header("Range", range)
+                            .executeAsync();
+                    if (response.isOk()) {
+                        final String pathname = newFile + StrFormatter.format(".{}.part", NumberUtil.decimalFormat("0000", j));
+                        files.add(pathname);
+                        response.writeBody(new File(pathname));
+                    }
+                    else {
+                        throw new HttpException("Server response error with status code: [{}-{}] {}", response.getStatus(), range, response.body());
+                    }
+                }
+                Files.deleteIfExists(Paths.get(newFile));
+                try (FileChannel outChannel = FileChannel.open(Paths.get(newFile),
+                        StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+                    for (String f : files) {
+                        final Path path = Paths.get(f);
+                        try (FileChannel inChannel = FileChannel.open(path)) {
+                            inChannel.transferTo(0, inChannel.size(), outChannel);
+                        }
+                        Files.deleteIfExists(path);
+                    }
+                }
+                StaticLog.info("下载文件结束 {}", newFile);
+            }
+
+        }
+        else {
+            //不分区下载
+            final HttpResponse response = getRequest(timeout, url).executeAsync();
+            if (response.isOk()) {
+
+                response.writeBody(new File(newFile), ".part", progress);
+
+                return;
+            }
+
+            throw new HttpException("Server response error with status code: [{}]", response.getStatus());
+        }
+
+
+    }
+
+
+    private HttpRequest getRequest(int timeout, String url) {
         final HttpRequest request = HttpUtil.createGet(url, true);
         if (timeout > 0) {
             // 只有用户自定义了超时时长才有效，否则使用全局默认的超时时长。
             request.timeout(timeout);
         }
-
         auth(request);
-
-
-        final HttpResponse response = request.executeAsync();
-        if (response.isOk()) {
-            return response;
-        }
-
-        throw new HttpException("Server response error with status code: [{}]", response.getStatus());
+        return request;
     }
 
 

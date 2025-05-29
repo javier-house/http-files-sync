@@ -11,3 +11,7 @@ sync:
   service: http://127.0.0.1:19529
   # 请求密钥
   key: 123
+  # 是否开启文件分区下载
+  range: true
+  # 文件分片字节数
+  rangeSize: 20480
